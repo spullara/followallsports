@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Follow Sports on Twitter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        .notfound {
+            color: red;
+        }
+    </style>
+    <link href="assets/css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <link rel="shortcut icon" href="assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
+</head>
+
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">Follow Sports</a>
+
+            <div class="nav-collapse collapse">
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- Main hero unit for a primary marketing message or call to action -->
+    <div class="hero-unit">
+        <h1>Follow Your Teams on Twitter</h1>
+
+        <p>Simply select the sport, league and team you are interested in and you will get a verified account
+            that you can follow to keep up to date with their latest results and news.</p>
+    </div>
+
+    <!-- Example row of columns -->
+    <div class="row">
+        <div class="span4">
+            <h2>Choose a sport</h2>
+            <select id="sports">
+                <option value="">-- Select Sport --</option>
+            </select>
+
+            <p><img id="sportload" class="hidden" src="ajax-loader.gif"></p>
+        </div>
+        <div class="span4">
+            <h2>Choose a league</h2>
+            <select id="leagues">
+                <option value="">-- Select League --</option>
+            </select>
+
+            <p><img id="leagueload" class="hidden" src="ajax-loader.gif"></p>
+        </div>
+        <div class="span4">
+            <h2>Choose a team</h2>
+            <select id="teams">
+                <option value="">-- Select Team --</option>
+            </select>
+
+            <p><img id="teamload" class="hidden" src="ajax-loader.gif"></p>
+
+            <p id="follow">
+            </p>
+        </div>
+    </div>
+
+    <hr>
+
+    <footer>
+        <p>&copy; Sam Pullara 2012</p>
+    </footer>
+
+</div>
+<!-- /container -->
+
+<!-- Le javascript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="assets/js/jquery.js"></script>
+<script src="assets/js/bootstrap-transition.js"></script>
+<script src="assets/js/bootstrap-alert.js"></script>
+<script src="assets/js/bootstrap-modal.js"></script>
+<script src="assets/js/bootstrap-dropdown.js"></script>
+<script src="assets/js/bootstrap-scrollspy.js"></script>
+<script src="assets/js/bootstrap-tab.js"></script>
+<script src="assets/js/bootstrap-tooltip.js"></script>
+<script src="assets/js/bootstrap-popover.js"></script>
+<script src="assets/js/bootstrap-button.js"></script>
+<script src="assets/js/bootstrap-collapse.js"></script>
+<script src="assets/js/bootstrap-carousel.js"></script>
+<script src="assets/js/bootstrap-typeahead.js"></script>
+
+<script type="text/javascript">
+    var sportsData;
+    $(function () {
+        var sports = $("#sports");
+        sports.change(function () {
+            $("#show,#notfound").addClass("hidden");
+            $("#leagues").val(0).find("option").each(function (i, option) {
+                if ($(option).val()) {
+                    $(option).remove();
+                }
+            });
+            $("#teams").val(0).find("option").each(function (i, option) {
+                if ($(option).val()) {
+                    $(option).remove();
+                }
+            });
+            var name = $("#sports").find("option:selected").val();
+            $(sportsData).each(function (i, sport) {
+                if (sport.name == name) {
+                    $(sport.leagues).each(function (i, league) {
+                        var option = document.createElement("option");
+                        option.value = league.abbreviation;
+                        option.innerText = league.shortName;
+                        $("#leagues").append(option);
+                    });
+                }
+            })
+        });
+        $("#leagues").change(function () {
+            $("#leagueload").removeClass("hidden");
+            $("#show").addClass("hidden");
+            var teams = $("#teams");
+            teams.val(0).find("option").each(function (i, option) {
+                if ($(option).val()) {
+                    $(option).remove();
+                }
+            });
+            $("#show,#notfound").addClass("hidden");
+            var sportName = $("#sports").find("option:selected").val();
+            var leagueName = $("#leagues").find("option:selected").val();
+            teams.attr("disabled", "disabled");
+            $.get("https://query.yahooapis.com/v1/public/yql/javarants/teams?format=json&sport=" + sportName + "&league=" + leagueName, function (data) {
+                $("#leagueload").addClass("hidden");
+                $(data.query.results.teams).each(function (i, team) {
+                    var option = document.createElement("option");
+                    option.value = team.id;
+                    if (team.name) {
+                        option.innerText = team.location + " " + team.name;
+                    } else {
+                        option.innerText = team.location;
+                    }
+                    $("#teams").append(option);
+                });
+                $("#teams").removeAttr("disabled");
+            });
+        });
+        $("#teams").change(function () {
+            var teamName = $("#teams").find("option:selected")[0].innerText;
+            $("#teamload").removeClass("hidden");
+            var follow = $("#follow");
+            follow.find("iframe,a").remove();
+            $.get("https://query.yahooapis.com/v1/public/yql/javarants/verified?format=json&name=" + teamName, function (data) {
+                $("#teamload").addClass("hidden");
+                var users = data.query.results;
+                var button = $(document.createElement("a"));
+                if (users) {
+                    var name = users.user[0] ? users.user[0].screen_name : users.user.screen_name;
+                    button.attr("href", "https://twitter.com/" + name);
+                    button.attr("class", "twitter-follow-button");
+                    button.text("Follow @" + name);
+                    follow.append(button);
+                    twttr.widgets.load();
+                } else {
+                    button.attr("href", "https://search.twitter.com/search/users/" + teamName);
+                    button.text("Not found");
+                    button.addClass("notfound");
+                    follow.append(button);
+                }
+            });
+        });
+        $("#sportload").removeClass("hidden");
+        var enabled = {'baseball':true, 'football':true, 'basketball':true, 'hockey':true, 'soccer':true};
+        sports.attr("disabled", "disabled");
+        $.get("http://query.yahooapis.com/v1/public/yql/javarants/sports?format=json", function (data) {
+            $("#sportload").addClass("hidden");
+            sportsData = data.query.results.sports;
+            $(sportsData).each(function (i, sport) {
+                if (enabled[sport.name]) {
+                    var name = sport.name.substring(0, 1).toUpperCase() + sport.name.substring(1);
+                    var option = document.createElement("option");
+                    option.value = sport.name;
+                    option.innerText = name;
+                    $("#sports").append(option);
+                }
+            })
+            $("#sports").removeAttr("disabled");
+        });
+    });
+</script>
+<script>!function (d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (!d.getElementById(id)) {
+        js = d.createElement(s);
+        js.id = id;
+        js.src = "https://platform.twitter.com/widgets.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }
+}(document, "script", "twitter-wjs");</script>
+</body>
+</html>
